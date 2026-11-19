@@ -262,7 +262,10 @@ if(WIN32)
     if(NOT PKG_CONFIG_EXECUTABLE)
         find_program(PKG_CONFIG_EXECUTABLE NAMES pkg-config)
     endif()
-    find_package(PkgConfig REQUIRED)
+    # MSVC builds locate FFmpeg directly (src/slic3r/CMakeLists.txt) and need no pkg-config.
+    if(NOT MSVC)
+        find_package(PkgConfig REQUIRED)
+    endif()
 endif()
 
 if (APPLE)
@@ -542,6 +545,10 @@ find_package(TBB REQUIRED)
 # add_definitions(-DTBB_USE_CAPTURED_EXCEPTION=0)
 
 find_package(OpenSSL REQUIRED)
+if (MSVC)
+    # The prebuilt OpenSSL static libraries (deps/OpenSSL) are built with /MT; link them against the DLL CRT.
+    set_property(TARGET OpenSSL::Crypto APPEND PROPERTY INTERFACE_LINK_OPTIONS /NODEFAULTLIB:LIBCMT)
+endif ()
 if (APPLE)
 find_package(CURL CONFIG REQUIRED)
 else()

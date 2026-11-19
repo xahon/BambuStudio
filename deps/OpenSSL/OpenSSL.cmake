@@ -1,4 +1,46 @@
 
+# MSVC: use the prebuilt static libraries from the openssl-native NuGet package
+# instead of building from source, which would need a native Perl install.
+# Its static libraries are built with /MT and carry a LIBCMT default-lib
+# directive; the app links them with /NODEFAULTLIB:LIBCMT (see CMakeLists.txt).
+if (MSVC)
+    if (DEP_PLATFORM STREQUAL "ARM64")
+        set(_openssl_pkg_arch "win-arm64")
+    elseif (DEP_PLATFORM STREQUAL "x64" OR DEP_PLATFORM STREQUAL "ARM64EC")
+        set(_openssl_pkg_arch "win-x64")
+    else ()
+        message(FATAL_ERROR "Prebuilt OpenSSL is only available for 64-bit targets, got DEP_PLATFORM=${DEP_PLATFORM}")
+    endif ()
+
+    if (MSVC_VERSION LESS 1920)
+        set(_openssl_toolset "v141")
+    elseif (MSVC_VERSION LESS 1930)
+        set(_openssl_toolset "v142")
+    else ()
+        set(_openssl_toolset "v143")
+    endif ()
+    if (_openssl_pkg_arch STREQUAL "win-arm64" AND _openssl_toolset STREQUAL "v141")
+        message(FATAL_ERROR "Prebuilt OpenSSL has no ARM64 libraries for the v141 toolset")
+    endif ()
+
+    set(_openssl_dstdir "${DESTDIR}/usr/local")
+    set(_openssl_libdir "<SOURCE_DIR>/lib/${_openssl_pkg_arch}/native")
+    ExternalProject_Add(dep_OpenSSL
+        URL "https://www.nuget.org/api/v2/package/openssl-native/3.5.9"
+        URL_HASH SHA256=5884c788d624b8a9d9d0510d13f02a9ce487fc0bb570418b8d53444205423d42
+        DOWNLOAD_NAME "openssl-native.3.5.9.zip"
+        DOWNLOAD_DIR ${DEP_DOWNLOAD_DIR}/OpenSSL
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "<SOURCE_DIR>/include/openssl" "${_openssl_dstdir}/include/openssl"
+            COMMAND ${CMAKE_COMMAND} -E copy "${_openssl_libdir}/libcrypto_static_${_openssl_toolset}.lib" "${_openssl_dstdir}/lib/libcrypto.lib"
+            COMMAND ${CMAKE_COMMAND} -E copy "${_openssl_libdir}/libssl_static_${_openssl_toolset}.lib" "${_openssl_dstdir}/lib/libssl.lib"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_LIST_DIR}/openssl" "${_openssl_dstdir}/${CMAKE_INSTALL_LIBDIR}/cmake/openssl"
+    )
+    return()
+endif ()
+
 include(ProcessorCount)
 ProcessorCount(NPROC)
 
