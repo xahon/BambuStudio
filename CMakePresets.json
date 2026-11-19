@@ -2,73 +2,48 @@
     "version": 3,
     "cmakeMinimumRequired": {
         "major": 3,
-        "minor": 20,
+        "minor": 24,
         "patch": 0
-    },    
-    "configurePresets": [        
+    },
+    "configurePresets": [
         {
-            "name": "msvc_debug",
-            "displayName": "windows debug Build",
-            "description": "",
-            "binaryDir": "${sourceDir}/build/debug",
-            "generator": "Visual Studio 18",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_PREFIX_PATH": "D:/dep_win_new/usr/local",
-                "CMAKE_INSTALL_PREFIX": "D:/dep_win_new/usr/local",
-                "BBL_RELEASE_TO_PUBLIC": "0"
+            "name": "vs2026-release",
+            "displayName": "Visual Studio 2026 Release",
+            "description": "Optimized x64 build with C++ Dynamic Debugging: the Visual Studio debugger deoptimizes each function that gets a breakpoint or is stepped into.",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "generator": "Visual Studio 18 2026",
+            "architecture": {
+                "value": "x64",
+                "strategy": "set"
             },
-            "environment": {
-                "VSLANG": "1033"
-            }
-        },
-        {
-            "name": "msvc_debug_public",
-            "displayName": "windows debug Build",
-            "description": "",
-            "binaryDir": "${sourceDir}/build/debug",
-            "generator": "Visual Studio 18",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_PREFIX_PATH": "D:/dep_win_new/usr/local",
-                "CMAKE_INSTALL_PREFIX": "D:/dep_win_new/usr/local",
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CONFIGURATION_TYPES": "Release",
+                "CMAKE_C_FLAGS_RELEASE": "/MD /O2 /Ob2 /DNDEBUG /dynamicdeopt",
+                "CMAKE_CXX_FLAGS_RELEASE": "/MD /O2 /Ob2 /DNDEBUG /dynamicdeopt",
+                "CMAKE_STATIC_LINKER_FLAGS_RELEASE": "/dynamicdeopt",
+                "CMAKE_SHARED_LINKER_FLAGS_RELEASE": "/INCREMENTAL:NO /DEBUG /dynamicdeopt",
+                "CMAKE_MODULE_LINKER_FLAGS_RELEASE": "/INCREMENTAL:NO /DEBUG /dynamicdeopt",
+                "CMAKE_EXE_LINKER_FLAGS_RELEASE": "/INCREMENTAL:NO /DEBUG /dynamicdeopt",
+                "CMAKE_PREFIX_PATH": "${sourceDir}/deps/build/vs2026/destdir/usr/local",
+                "CMAKE_PROJECT_TOP_LEVEL_INCLUDES": "${sourceDir}/cmake/DepsPrefetch.cmake",
                 "BBL_RELEASE_TO_PUBLIC": "1"
             },
             "environment": {
                 "VSLANG": "1033"
-            }
-        },
-        {
-            "name": "msvc_release",
-            "displayName": "windows release Build",
-            "description": "",
-            "binaryDir": "${sourceDir}/build/release",
-            "generator": "Visual Studio 17",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_PREFIX_PATH": "D:/dep_win_new/usr/local",
-                "CMAKE_INSTALL_PREFIX": "D:/dep_win_new/usr/local",
-                "BBL_RELEASE_TO_PUBLIC": "0"
             },
-            "environment": {
-                "VSLANG": "1033"
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
             }
-        },
+        }
+    ],
+    "buildPresets": [
         {
-            "name": "msvc_release_public",
-            "displayName": "windows release Build",
-            "description": "",
-            "binaryDir": "${sourceDir}/build/release",
-            "generator": "Visual Studio 18",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_PREFIX_PATH": "D:/dep_win_new/usr/local",
-                "CMAKE_INSTALL_PREFIX": "D:/dep_win_new/usr/local",
-                "BBL_RELEASE_TO_PUBLIC": "1"
-            },
-            "environment": {
-                "VSLANG": "1033"
-            }
+            "name": "vs2026-release",
+            "configurePreset": "vs2026-release",
+            "configuration": "Release"
         }
     ]
 }
