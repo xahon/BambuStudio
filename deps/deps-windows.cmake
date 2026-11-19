@@ -93,7 +93,7 @@ if (${DEP_DEBUG})
     ExternalProject_Add_Step(${_dep} build_debug
         DEPENDEES build
         DEPENDERS install
-        COMMAND msbuild /m /P:Configuration=Debug INSTALL.vcxproj
+        COMMAND ${CMAKE_COMMAND} --build . --target install --config Debug -- /m
         WORKING_DIRECTORY "${BINARY_DIR}"
     )
 endif ()

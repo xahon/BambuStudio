@@ -950,7 +950,20 @@ if (WIN32)
     endif ()
 endif ()
 
-if (NOT APPLE)
+if (MSVC)
+    find_path(LIBAV_INCLUDE_DIR libavcodec/avcodec.h)
+    if (NOT LIBAV_INCLUDE_DIR)
+        message(FATAL_ERROR "FFmpeg headers (libavcodec/avcodec.h) not found in CMAKE_PREFIX_PATH")
+    endif ()
+    target_include_directories(libslic3r_gui PUBLIC ${LIBAV_INCLUDE_DIR})
+    foreach (_libav_name avcodec swscale avutil)
+        find_library(LIBAV_${_libav_name}_LIBRARY ${_libav_name})
+        if (NOT LIBAV_${_libav_name}_LIBRARY)
+            message(FATAL_ERROR "FFmpeg library ${_libav_name} not found in CMAKE_PREFIX_PATH")
+        endif ()
+        target_link_libraries(libslic3r_gui ${LIBAV_${_libav_name}_LIBRARY})
+    endforeach ()
+elseif (NOT APPLE)
     pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
         libavcodec
         libswscale

@@ -42,7 +42,7 @@ if (MSVC)
             DEPENDEES build
             DEPENDERS install
             COMMAND ${CMAKE_COMMAND} ../dep_OpenVDB -DOPENVDB_BUILD_VDB_PRINT=OFF
-            COMMAND msbuild /m /P:Configuration=Debug INSTALL.vcxproj
+            COMMAND ${CMAKE_COMMAND} --build . --target install --config Debug -- /m
             WORKING_DIRECTORY "${BINARY_DIR}"
         )
     endif ()

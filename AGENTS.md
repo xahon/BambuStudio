@@ -24,6 +24,15 @@ This repository is a fork of [bambulab/BambuStudio](https://github.com/bambulab/
 - Keep the subject line short (about 72 characters at most), in the imperative mood, with no trailing period. Example: `Build: Use prebuilt OpenSSL on MSVC`.
 - The description is optional. When present, separate it from the subject with a blank line.
 
+## Windows build (Visual Studio 2026)
+
+The build needs only Visual Studio 2026 with the C++ workload, CMake 3.21+ and Git.
+
+1. Deps: from `deps/`, run `cmake --preset vs2026`, then `cmake --build --preset vs2026`.
+2. App: from the repository root, run `cmake --preset vs2026-debug` (or `vs2026-release`), then `cmake --build --preset vs2026-debug`.
+
+Details are in [agents/windows-build.md](agents/windows-build.md).
+
 ## Notes in `agents/`
 
 `agents/` holds what earlier investigations found, so it doesn't have to be re-derived. Read the relevant note before investigating, and update it when you learn something new.
