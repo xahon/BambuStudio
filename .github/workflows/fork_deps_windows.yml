@@ -42,6 +42,8 @@ jobs:
           "tree=$tree" >> $env:GITHUB_OUTPUT
           "tag=$tag" >> $env:GITHUB_OUTPUT
           "exists=$exists" >> $env:GITHUB_OUTPUT
+          # A missing release leaves gh's exit code in $LASTEXITCODE, which the runner would otherwise report as a failure.
+          exit 0
 
       - name: Build deps
         if: steps.key.outputs.exists != 'true'
