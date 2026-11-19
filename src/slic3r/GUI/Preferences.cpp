@@ -1044,6 +1044,9 @@ wxBoxSizer *PreferencesDialog::create_item_checkbox(wxString title, wxWindow *pa
             wxGetApp().switch_staff_pick(pbool);
         }
 
+        if (param == "show_library" || param == "show_makerlab" || param == "show_maker_supply")
+            wxGetApp().refresh_homepage_access_ui();
+
         if (param == "show_bed_heat_soak_area") {
             if (wxGetApp().plater())
                 wxGetApp().plater()->on_show_bed_heat_soak_area_changed();
@@ -1765,19 +1768,20 @@ wxWindow *PreferencesDialog::create_other_tab()
     sizer->Add(wrap_option_row(scrolled, item_gcodes_warning), flags);
     sizer->Add(wrap_option_row(scrolled, item_skip_printer_check), flags);
 
-    // ---- Online Models (visible only when has_model_mall()) ----
-    auto title_modelmall   = create_item_title(_L("Online Models"), scrolled, _L("Online Models"));
+    // ---- Promotion (the staff-pick and history rows are visible only when has_model_mall()) ----
+    auto title_modelmall   = create_item_title(_L("Promotion"), scrolled, _L("Promotion"));
+    auto item_library      = create_item_checkbox(_L("Show Library on the home page"), scrolled, _L("Show Library on the home page"), 50, "show_library");
     auto item_modelmall    = create_item_checkbox(_L("Show online staff-picked models on the home page"), scrolled, _L("Show online staff-picked models on the home page"), 50,
                                                   "staff_pick_switch");
     auto item_show_history = create_item_checkbox(_L("Show history on the home page"), scrolled, _L("Show history on the home page"), 50, "show_print_history");
 
-    auto title_modelmall_item   = sizer->Add(title_modelmall, wxSizerFlags().Expand().Border(wxTOP, FromDIP(16)));
+    sizer->Add(title_modelmall, wxSizerFlags().Expand().Border(wxTOP, FromDIP(16)));
+    sizer->Add(wrap_option_row(scrolled, item_library), flags);
     auto item_modelmall_item    = sizer->Add(wrap_option_row(scrolled, item_modelmall), flags);
     auto item_show_history_item = sizer->Add(wrap_option_row(scrolled, item_show_history), flags);
 
-    auto update_modelmall = [scrolled, title_modelmall_item, item_modelmall_item, item_show_history_item](wxEvent &) {
+    auto update_modelmall = [scrolled, item_modelmall_item, item_show_history_item](wxEvent &) {
         bool has_model_mall = wxGetApp().has_model_mall();
-        title_modelmall_item->Show(has_model_mall);
         item_modelmall_item->Show(has_model_mall);
         item_show_history_item->Show(has_model_mall);
         scrolled->Layout();
@@ -1785,6 +1789,11 @@ wxWindow *PreferencesDialog::create_other_tab()
     };
     wxCommandEvent dummy(wxEVT_COMBOBOX);
     update_modelmall(dummy);
+
+    auto item_makerlab     = create_item_checkbox(_L("Show MakerLab on the home page"), scrolled, _L("Show MakerLab on the home page"), 50, "show_makerlab");
+    auto item_maker_supply = create_item_checkbox(_L("Show Maker's Supply on the home page"), scrolled, _L("Show Maker's Supply on the home page"), 50, "show_maker_supply");
+    sizer->Add(wrap_option_row(scrolled, item_makerlab), flags);
+    sizer->Add(wrap_option_row(scrolled, item_maker_supply), flags);
 
     // ---- Developer Mode (Figma keeps these two here, in the Other tab) ----
     auto title_dev           = create_item_title(_L("Developer Mode"), scrolled, _L("Developer Mode"));
@@ -2173,6 +2182,9 @@ void PreferencesDialog::on_reset_preferences()
         "backup_interval",
         "staff_pick_switch",
         "show_print_history",
+        "show_library",
+        "show_makerlab",
+        "show_maker_supply",
         "developer_mode",
         "skip_ams_blacklist_check",
         "enable_webview_devtools",
