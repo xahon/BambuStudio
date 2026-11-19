@@ -2,7 +2,7 @@
     "version": 3,
     "cmakeMinimumRequired": {
         "major": 3,
-        "minor": 21,
+        "minor": 24,
         "patch": 0
     },
     "configurePresets": [
@@ -17,6 +17,7 @@
             },
             "cacheVariables": {
                 "CMAKE_PREFIX_PATH": "${sourceDir}/deps/build/vs2026/destdir/usr/local",
+                "CMAKE_PROJECT_TOP_LEVEL_INCLUDES": "${sourceDir}/cmake/DepsPrefetch.cmake",
                 "BBL_RELEASE_TO_PUBLIC": "1"
             },
             "environment": {

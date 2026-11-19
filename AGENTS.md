@@ -26,10 +26,9 @@ This repository is a fork of [bambulab/BambuStudio](https://github.com/bambulab/
 
 ## Windows build (Visual Studio 2026)
 
-The build needs only Visual Studio 2026 with the C++ workload, CMake 3.21+ and Git.
+The build needs only Visual Studio 2026 with the C++ workload, CMake 3.24+ and Git.
 
-1. Deps: from `deps/`, run `cmake --preset vs2026`, then `cmake --build --preset vs2026`.
-2. App: from the repository root, run `cmake --preset vs2026-debug` (or `vs2026-release`), then `cmake --build --preset vs2026-debug`.
+From the repository root, run `cmake --preset vs2026-debug` (or `vs2026-release`), then `cmake --build --preset vs2026-debug`. Configure provides the deps by itself: it downloads the prebuilt archive for the current `deps/`, or builds `deps/` locally when there is none.
 
 Details are in [agents/windows-build.md](agents/windows-build.md).
 
