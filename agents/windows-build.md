@@ -18,6 +18,7 @@ Upstream's Windows build only works on a prepared machine. Its presets point to 
 | OpenSSL | Built from source 3.1.2 with `perl Configure` + `nmake` (requires a native Perl; Git's MSYS Perl does not work) | Prebuilt static libraries from the NuGet `openssl-native` 3.5.9 package, SHA-256 pinned (`deps/OpenSSL/OpenSSL.cmake`) |
 | Deps Debug install steps | Bare `msbuild` (requires a VS Developer prompt) | `cmake --build . --target install --config Debug -- /m` (`deps/deps-windows.cmake`, `deps/OpenVDB/OpenVDB.cmake`) |
 | OpenCV Python detection | Fails with CMake 4 when any Python is on PATH (`find_package(Python3 "OFF")`) | Skipped with `-DOPENCV_PYTHON_SKIP_DETECTION=ON` (`deps/OpenCV/OpenCV.cmake`). The Python bindings are disabled anyway |
+| Device page pnpm steps | The `pnpm install`/`pnpm run build` commands embed the whole configure-time PATH, so reconfiguring from another environment (a terminal, then an IDE) changes them and MSBuild reruns both | On CMake 3.25+, `cmake -E env --modify PATH=path_list_prepend:<node dir>` adds node at build time, so the commands stay the same. Older CMake keeps the upstream form (`src/slic3r/GUI/DeviceWeb/CMakeLists.txt`) |
 
 ## Deviations
 
