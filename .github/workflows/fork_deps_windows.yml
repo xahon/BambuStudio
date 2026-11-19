@@ -1,0 +1,65 @@
+# Publishes the prebuilt Windows deps that cmake/DepsPrefetch.cmake downloads during configure.
+# One release per deps/ tree, tagged deps-<first 12 characters of the deps/ tree hash>.
+name: Fork deps (Windows)
+
+on:
+  push:
+    branches:
+      - fork
+    paths:
+      - 'deps/**'
+      - 'cmake/DepsPackage.cmake'
+      - '.github/workflows/fork_deps_windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fork-deps-windows-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deps:
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 360
+    env:
+      GH_TOKEN: ${{ github.token }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Compute the deps key
+        id: key
+        run: |
+          $tree = git rev-parse HEAD:deps
+          $tag = "deps-$($tree.Substring(0, 12))"
+          gh release view $tag --repo "${{ github.repository }}" *> $null
+          $exists = if ($LASTEXITCODE -eq 0) { 'true' } else { 'false' }
+          "tree=$tree" >> $env:GITHUB_OUTPUT
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "exists=$exists" >> $env:GITHUB_OUTPUT
+
+      - name: Build deps
+        if: steps.key.outputs.exists != 'true'
+        working-directory: deps
+        run: |
+          cmake --preset vs2026
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --build --preset vs2026
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Pack deps
+        if: steps.key.outputs.exists != 'true'
+        run: cmake -DDEPS_DIR=deps/build/vs2026 -DOUTPUT=deps-vs2026-x64.tar.zst -P cmake/DepsPackage.cmake
+
+      - name: Publish release
+        if: steps.key.outputs.exists != 'true'
+        run: >
+          gh release create "${{ steps.key.outputs.tag }}" deps-vs2026-x64.tar.zst deps-vs2026-x64.tar.zst.sha256
+          --repo "${{ github.repository }}" --target "${{ github.sha }}" --prerelease --latest=false
+          --title "Deps ${{ steps.key.outputs.tag }} (VS 2026, x64)"
+          --notes "Prebuilt Windows deps for deps/ tree ${{ steps.key.outputs.tree }}, used by cmake/DepsPrefetch.cmake."
