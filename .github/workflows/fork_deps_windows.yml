@@ -56,7 +56,7 @@ jobs:
 
       - name: Pack deps
         if: steps.key.outputs.exists != 'true'
-        run: cmake -DDEPS_DIR=deps/build/vs2026 -DOUTPUT=deps-vs2026-x64.tar.zst -P cmake/DepsPackage.cmake
+        run: cmake "-DDEPS_DIR=deps/build/vs2026" "-DOUTPUT=deps-vs2026-x64.tar.zst" -P cmake/DepsPackage.cmake
 
       - name: Publish release
         if: steps.key.outputs.exists != 'true'

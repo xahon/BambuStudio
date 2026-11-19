@@ -82,6 +82,7 @@ The deps can still be built by hand: from `deps/`, run `cmake --preset vs2026`, 
 
 Gotchas:
 - Git Bash rewrites `/m` in `cmake --build ... -- /m` into `M:/`. Use `-m`, or set `MSYS_NO_PATHCONV=1`.
+- PowerShell splits an unquoted native argument that starts with `-` at its first `.`: `-DOUTPUT=deps-vs2026-x64.tar.zst` reaches CMake as `-DOUTPUT=deps-vs2026-x64`. Quote such arguments, as the workflow does.
 - Editing a CMake file during a VS build makes the next build regenerate the project. This is harmless.
 - A deps patch applied with `git apply` but without `--directory ${BINARY_DIR_REL}/dep_<Lib>-prefix/src/dep_<Lib>` is silently skipped ("Skipped patch" in the log, exit code 0), because `deps/build` is inside the checkout.
 - The runner image brings its own CMake, which can be newer than the local one, so a deps change that configures locally can still fail in CI.
