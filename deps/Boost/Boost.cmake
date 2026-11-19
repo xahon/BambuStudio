@@ -1,3 +1,7 @@
+if (BINARY_DIR_REL)
+    set(BOOST_DIRECTORY_FLAG --directory ${BINARY_DIR_REL}/dep_Boost-prefix/src/dep_Boost)
+endif ()
+
 
 set(_context_abi_line "")
 set(_context_arch_line "")
@@ -52,7 +56,7 @@ bambustudio_add_cmake_project(Boost
     URL "https://github.com/boostorg/boost/releases/download/boost-1.84.0/boost-1.84.0.tar.gz"
     URL_HASH SHA256=4d27e9efed0f6f152dc28db6430b9d3dfb40c0345da7342eaa5a987dde57bd95
     LIST_SEPARATOR |
-    PATCH_COMMAND git apply --verbose --ignore-space-change --whitespace=fix ${CMAKE_CURRENT_LIST_DIR}/0001-FIX-OBS-cannot-start-streaming-on-MAC.patch
+    PATCH_COMMAND git apply ${BOOST_DIRECTORY_FLAG} --verbose --ignore-space-change --whitespace=fix ${CMAKE_CURRENT_LIST_DIR}/0001-FIX-OBS-cannot-start-streaming-on-MAC.patch ${CMAKE_CURRENT_LIST_DIR}/0002-Boost-locale-source-group-CMake-4.5.patch
     CMAKE_ARGS
         -DBOOST_EXCLUDE_LIBRARIES:STRING=contract|fiber|numpy|wave|test${_boost_ec_extra_excludes}
         -DBOOST_LOCALE_ENABLE_ICU:BOOL=OFF # do not link to libicu, breaks compatibility between distros
