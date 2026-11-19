@@ -1,0 +1,7 @@
+#ifndef __SLIC3R_BUILD_TIME_H
+#define __SLIC3R_BUILD_TIME_H
+
+// Changes on every CMake configure. Include it only in the source files that use it, never from a header, so that a reconfigure recompiles just those files instead of everything that includes libslic3r.h.
+#define SLIC3R_BUILD_TIME "@SLIC3R_BUILD_TIME@"
+
+#endif /* __SLIC3R_BUILD_TIME_H */

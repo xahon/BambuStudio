@@ -19,6 +19,7 @@ Upstream's Windows build only works on a prepared machine. Its presets point to 
 | Deps Debug install steps | Bare `msbuild` (requires a VS Developer prompt) | `cmake --build . --target install --config Debug -- /m` (`deps/deps-windows.cmake`, `deps/OpenVDB/OpenVDB.cmake`) |
 | OpenCV Python detection | Fails with CMake 4 when any Python is on PATH (`find_package(Python3 "OFF")`) | Skipped with `-DOPENCV_PYTHON_SKIP_DETECTION=ON` (`deps/OpenCV/OpenCV.cmake`). The Python bindings are disabled anyway |
 | Device page pnpm steps | The `pnpm install`/`pnpm run build` commands embed the whole configure-time PATH, so reconfiguring from another environment (a terminal, then an IDE) changes them and MSBuild reruns both | On CMake 3.25+, `cmake -E env --modify PATH=path_list_prepend:<node dir>` adds node at build time, so the commands stay the same. Older CMake keeps the upstream form (`src/slic3r/GUI/DeviceWeb/CMakeLists.txt`) |
+| Build time stamp | `SLIC3R_BUILD_TIME` is the configure time in `libslic3r_version.h`, which `libslic3r.h` and both precompiled headers include, so every configure (IDEs rerun it on their own) recompiles nearly all C++ | It moves to a separate generated `libslic3r_build_time.h`, included only by the three files that use it (`src/libslic3r/libslic3r_build_time.h.in`, `src/libslic3r/CMakeLists.txt`, `LogSink.cpp`, `AboutDialog.cpp`, `GUI_App.cpp`). A configure recompiles just those |
 
 ## Deviations
 
