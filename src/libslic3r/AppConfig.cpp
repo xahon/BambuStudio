@@ -371,7 +371,7 @@ void AppConfig::set_defaults()
     }
 
     if (get("show_print_history").empty()) {
-        set_bool("show_print_history", true);
+        set_bool("show_print_history", false);
     }
 
     if (get("show_printable_box").empty()) {
@@ -443,7 +443,19 @@ void AppConfig::set_defaults()
     }
 
     if (get("staff_pick_switch").empty()) {
-        set_bool("staff_pick_switch", true);
+        set_bool("staff_pick_switch", false);
+    }
+
+    if (get("show_library").empty()) {
+        set_bool("show_library", false);
+    }
+
+    if (get("show_makerlab").empty()) {
+        set_bool("show_makerlab", false);
+    }
+
+    if (get("show_maker_supply").empty()) {
+        set_bool("show_maker_supply", false);
     }
 
     if (get("sync_system_preset").empty()) {

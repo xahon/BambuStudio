@@ -2621,13 +2621,16 @@ void WebViewPanel::SetLeftMenuShow(std::string menuname, int show)
 bool WebViewPanel::IsMenuAccessDisabled(const std::string &menu) const
 {
     // Account restrictions from the minors decisions; "search" is the MakerWorld search page,
-    // "printhistory" is the MakerWorld print-history page.
+    // "printhistory" is the MakerWorld print-history page. Library ("home"), MakerLab and Maker's
+    // Supply are also hidden unless the user opted in to them under Preferences > Promotion.
+    if (menu == "home" && !wxGetApp().app_config->get_bool("show_library"))
+        return true;
     if (menu == "home" || menu == "online" || menu == "search" || menu == "printhistory")
         return wxGetApp().is_maker_world_access_disabled();
     if (menu == "makerlab")
-        return wxGetApp().is_maker_lab_access_disabled();
+        return wxGetApp().is_maker_lab_access_disabled() || !wxGetApp().app_config->get_bool("show_makerlab");
     if (menu == "makersupply")
-        return wxGetApp().is_maker_supply_access_disabled();
+        return wxGetApp().is_maker_supply_access_disabled() || !wxGetApp().app_config->get_bool("show_maker_supply");
     return false;
 }
 
