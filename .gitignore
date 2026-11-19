@@ -50,3 +50,4 @@ resources/web/device_page_html/
 
 # compare-pages.mjs screenshot / report output
 src/slic3r/GUI/DeviceWeb/DeviceWebHtml/tools/out/
+CMakeUserPresets.json

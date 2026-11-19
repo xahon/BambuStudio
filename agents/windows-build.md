@@ -2,7 +2,7 @@
 
 ## Goal
 
-Build on Windows with Visual Studio 2026, in Debug and Release, from an IDE or the command line, in one step. Nothing beyond Visual Studio (C++ workload), CMake and Git needs to be installed system-wide.
+Build on Windows with Visual Studio 2026, from an IDE or the command line, in one step, as one optimized build that is still fully debuggable. Nothing beyond Visual Studio (C++ workload), CMake and Git needs to be installed system-wide.
 
 ## Problem
 
@@ -12,7 +12,8 @@ Upstream's Windows build only works on a prepared machine. Its presets point to 
 
 | Aspect | master | fork |
 | :- | :- | :- |
-| Presets | `CMakePresets.json` hardcodes `D:/dep_win_new/usr/local`, mixes the VS 17 and VS 18 generators, and has no preset for the deps | Upstream `CMakePresets.json` is untouched. `CMakeUserPresets.json` adds `vs2026-debug` and `vs2026-release`, and `deps/CMakePresets.json` adds `vs2026` |
+| Presets | `CMakePresets.json` hardcodes `D:/dep_win_new/usr/local`, mixes the VS 17 and VS 18 generators, and has no preset for the deps | `CMakePresets.json` holds only `vs2026-release`, and `deps/CMakePresets.json` adds `vs2026`. `CMakeUserPresets.json` is gitignored for personal presets |
+| Debugging | A Debug build next to a Release one, each needing its own deps variants | One Release build with C++ Dynamic Debugging: the preset adds `/dynamicdeopt` to the Release compiler and linker flags, and `CMAKE_CONFIGURATION_TYPES` limits the solution to Release (`CMakePresets.json`). The deps are built in Release only (`DEP_DEBUG` off in `deps/CMakePresets.json`) |
 | Deps provisioning | Built by hand from `deps/` before configuring the app | The app's configure downloads a prebuilt archive for the current `deps/` tree, or builds `deps/` itself (`cmake/DepsPrefetch.cmake`). CI publishes the archives (`.github/workflows/fork_deps_windows.yml`, `cmake/DepsPackage.cmake`) |
 | FFmpeg linking | `pkg_check_modules` (requires a system-wide `pkg-config`) | Under MSVC, `find_path`/`find_library` in `src/slic3r/CMakeLists.txt`, and `find_package(PkgConfig)` is skipped in `CMakeLists.txt` |
 | OpenSSL | Built from source 3.1.2 with `perl Configure` + `nmake` (requires a native Perl; Git's MSYS Perl does not work) | Prebuilt static libraries from the NuGet `openssl-native` 3.5.9 package, SHA-256 pinned (`deps/OpenSSL/OpenSSL.cmake`) |
@@ -29,6 +30,10 @@ Upstream's Windows build only works on a prepared machine. Its presets point to 
 - Only Visual Studio 2026 x64 has presets and prebuilt deps. VS 2022 is not targeted.
 - Prebuilt deps are hosted as GitHub Releases of this fork. Another fork has to publish its own (the workflow does that once Actions are enabled) and set `BBL_DEPS_URL`, or its configure builds the deps locally.
 - The presets need CMake 3.24+ for `CMAKE_PROJECT_TOP_LEVEL_INCLUDES`.
+- There is no Debug build: no debug CRT, no `_DEBUG` asserts and no `/RTC` checks. Deoptimized code is compiled with the Release defines.
+- Only the Visual Studio debugger uses the deoptimized code. Other debuggers (Rider, WinDbg) see a plain optimized build.
+- The deps are not built with `/dynamicdeopt`, so their code stays optimized in the debugger.
+- `BBL_INTERNAL_TESTING` keeps upstream's default of 1, so the app shows "Internal Version" and keeps its settings in `%APPDATA%\BambuStudioInternal`, apart from an installed official Bambu Studio.
 
 ## Details
 
@@ -37,17 +42,27 @@ The build has two separate CMake projects:
 1. **`deps/`** downloads and builds the third-party libraries (Boost, wxWidgets, OpenCV, CURL, ...) and installs them into `deps/build/vs2026/destdir/usr/local`.
    - Each library is an `ExternalProject` that downloads a pinned release or commit; fork-specific changes are `.patch` files next to its `deps/<Lib>/<Lib>.cmake`. CMake-based ones are added via `bambustudio_add_cmake_project` in `deps/CMakeLists.txt`.
    - `deps/deps-windows.cmake` maps `MSVC_VERSION` to the Visual Studio generator and Boost toolset: 1950-1969 maps to VS 18 / msvc-14.4, and anything newer is a FATAL_ERROR.
-   - Every CMake-based library is built with that VS generator, Release first and then Debug (`add_debug_dep`, which uses the `d` postfix).
-   - OpenSSL and FFmpeg come prebuilt and are release-only; both app configurations use them.
+   - Every CMake-based library is built with that VS generator in Release. Upstream also builds Debug variants (`add_debug_dep`, `d` postfix); the preset turns them off with `DEP_DEBUG`.
+   - OpenSSL and FFmpeg come prebuilt and are release-only.
    - Patches are applied with `git apply`.
 2. **The app** at the repository root finds the libraries through `CMAKE_PREFIX_PATH`, which the presets set.
 
 ```
-cmake --preset vs2026-debug
-cmake --build --preset vs2026-debug
+cmake --preset vs2026-release
+cmake --build --preset vs2026-release
 ```
 
-Use `vs2026-release` the same way for Release builds. Each preset builds into `build/<preset>`.
+The preset builds into `build/vs2026-release`.
+
+### Dynamic debugging
+
+The preset spells out the Release flags in full: CMake's defaults (`/MD /O2 /Ob2 /DNDEBUG` and `/INCREMENTAL:NO`) plus `/dynamicdeopt`, and `/DEBUG` for every linked binary. CMake's VS 2026 flag tables turn `/dynamicdeopt` into MSBuild's `UseDynamicDebugging` for the compiler and the linker. For the librarian it stays a plain option. Release has none of the options that conflict with it (`/GL`, `/RTC`, `/ZI`, `/JMC`, incremental linking), and `/DEBUG` turns off COMDAT folding.
+
+Setting `UseDynamicDebugging` through `CMAKE_VS_GLOBALS` instead does not work: it also reaches CMake's compiler detection project, which builds in Debug with `/RTC1`, so configure finds no compiler.
+
+Every source file is compiled twice, optimized and deoptimized, so a full build takes longer. Each binary gets an `.alt` twin with its own PDB next to it (`BambuStudio.alt.dll`, `bambu-studio.alt.exe`).
+
+In the Visual Studio debugger, a breakpoint or a step into a function switches that function to the deoptimized copy, and removing the breakpoint switches it back. To keep a function optimized, step into it from the Disassembly window, or clear "Automatically deoptimize debugged functions" in the debugging options.
 
 ### Deps provisioning
 
