@@ -191,6 +191,13 @@ else()
     set(DEVICE_PAGE_PATH "${NODE_BIN_PATH}:$ENV{PATH}")
 endif()
 
+# Prepends node to PATH at build time instead of embedding the configure-time PATH, so that reconfiguring from another environment (a terminal, an IDE) does not change the command and rerun pnpm.
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.25)
+    set(DEVICE_PAGE_ENV --modify "PATH=path_list_prepend:${NODE_BIN_PATH}")
+else()
+    set(DEVICE_PAGE_ENV "PATH=${DEVICE_PAGE_PATH}")
+endif()
+
 set(PNPM_STORE_DIR "${CMAKE_CURRENT_BINARY_DIR}/.pnpm-store")
 file(MAKE_DIRECTORY "${PNPM_STORE_DIR}")
 
@@ -226,9 +233,9 @@ set(DEVICE_PAGE_BUILD_INPUTS
 add_custom_command(
     OUTPUT "${DEVICE_PAGE_BUILD_STAMP}"
     COMMAND echo "Running PNPM install"
-    COMMAND ${CMAKE_COMMAND} -E env "PATH=${DEVICE_PAGE_PATH}" ${PNPM_EXECUTABLE} install --store-dir ${PNPM_STORE_DIR} --config.confirm-modules-purge=false
+    COMMAND ${CMAKE_COMMAND} -E env ${DEVICE_PAGE_ENV} ${PNPM_EXECUTABLE} install --store-dir ${PNPM_STORE_DIR} --config.confirm-modules-purge=false
     COMMAND echo "Running PNPM run build"
-    COMMAND ${CMAKE_COMMAND} -E env "PATH=${DEVICE_PAGE_PATH}" ${PNPM_EXECUTABLE} run build
+    COMMAND ${CMAKE_COMMAND} -E env ${DEVICE_PAGE_ENV} ${PNPM_EXECUTABLE} run build
     COMMAND echo "Removing page target directory"
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${DEVICE_PAGE_TARGET_DIR}"
     COMMAND echo "Creating page target directory"
